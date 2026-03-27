@@ -1,12 +1,11 @@
-export function calcEstimate(inputs) {
+export function calcEstimate(inputs = {}) {
   const {
     deliverables = [],
     complexity = 1,
     hourlyRate = 150,
-    revisionRounds = 2,
+    revisionRounds = 1,
   } = inputs;
 
-  let totalHours = 0;
   const hoursByCategory = {
     design: 0,
     am: 0,
@@ -15,32 +14,42 @@ export function calcEstimate(inputs) {
     development: 0,
   };
 
-  deliverables.forEach((item) => {
-    const base = item.baseHours || 10;
-    const adjusted = base * complexity;
+  deliverables.forEach((item = {}) => {
+    const baseHours = Number(item.baseHours ?? 10);
+    const category = item.category || "design";
+    const adjustedHours = Math.max(0, baseHours) * Math.max(complexity, 0);
 
-    hoursByCategory.design += adjusted;
-    totalHours += adjusted;
+    if (hoursByCategory[category] === undefined) {
+      hoursByCategory.design += adjustedHours;
+      return;
+    }
+
+    hoursByCategory[category] += adjustedHours;
   });
 
-  // Add AM overhead (15%)
-  const amHours = totalHours * 0.15;
-  hoursByCategory.am += amHours;
-  totalHours += amHours;
+  const productionHours = Object.values(hoursByCategory).reduce(
+    (sum, value) => sum + value,
+    0
+  );
 
-  // Add revisions (10% per round after 1)
-  if (revisionRounds > 1) {
-    const revisionMultiplier = 1 + (revisionRounds - 1) * 0.1;
-    totalHours *= revisionMultiplier;
-    hoursByCategory.design *= revisionMultiplier;
-    hoursByCategory.am *= revisionMultiplier;
-  }
+  const amOverheadHours = productionHours * 0.15;
+  hoursByCategory.am += amOverheadHours;
 
-  const totalCost = totalHours * hourlyRate;
+  const revisionMultiplier = revisionRounds > 1 ? 1 + (revisionRounds - 1) * 0.1 : 1;
+
+  Object.keys(hoursByCategory).forEach((key) => {
+    hoursByCategory[key] *= revisionMultiplier;
+  });
+
+  const totalHours = Object.values(hoursByCategory).reduce(
+    (sum, value) => sum + value,
+    0
+  );
+  const totalCost = totalHours * Math.max(hourlyRate, 0);
 
   return {
     totalHours,
     totalCost,
-    hours: hoursByCategory,
+    hoursByCategory,
   };
 }
