@@ -1,13 +1,17 @@
 import React from "react";
 
-function formatCurrency(val) {
-  return `$${Math.round(val).toLocaleString()}`;
+function formatCurrency(value) {
+  return `$${Math.round(value).toLocaleString()}`;
 }
 
-function getMarginColor(margin) {
-  if (margin > 0.35) return "green";
-  if (margin > 0.2) return "orange";
-  return "red";
+function formatPercent(value) {
+  return `${(value * 100).toFixed(1)}%`;
+}
+
+function getHealthColor(value, warningThreshold, healthyThreshold) {
+  if (value >= healthyThreshold) return "#188038";
+  if (value >= warningThreshold) return "#b06000";
+  return "#b3261e";
 }
 
 export default function ProfitPanel({ profitData }) {
@@ -22,47 +26,53 @@ export default function ProfitPanel({ profitData }) {
     plannedDays,
     overload,
     overageDays,
-    dailyCost,
+    burnRate,
+    delayCost,
     riskAdjustedMargin,
     breakEvenHours,
   } = profitData;
 
+  const marginColor = getHealthColor(margin, 0.2, 0.35);
+  const riskMarginColor = getHealthColor(riskAdjustedMargin, 0.15, 0.3);
+  const capacityColor = overload ? "#b3261e" : "#188038";
+
   return (
-    <div style={{ marginTop: 24, padding: 16, border: "1px solid #ddd" }}>
+    <section style={{ marginTop: 24, padding: 16, border: "1px solid #ddd" }}>
       <h3>Profit Snapshot</h3>
 
       <p>Revenue: {formatCurrency(revenue)}</p>
       <p>Internal Cost: {formatCurrency(internalCost)}</p>
-      <p style={{ color: getMarginColor(margin) }}>
-        Profit: {formatCurrency(profit)} ({(margin * 100).toFixed(1)}%)
+      <p style={{ color: marginColor }}>
+        Profit: {formatCurrency(profit)} ({formatPercent(margin)})
       </p>
 
       <hr />
 
       <h4>Capacity</h4>
-      <p>
-        Required: {requiredDays.toFixed(1)} days | Planned: {plannedDays} days
+      <p style={{ color: capacityColor }}>
+        Required: {requiredDays.toFixed(1)} days | Planned: {plannedDays.toFixed(1)} days
       </p>
-
-      {overload && (
-        <p style={{ color: "red" }}>
-          Over capacity by {overageDays.toFixed(1)} days
+      {overload ? (
+        <p style={{ color: "#b3261e" }}>
+          Risk: Over capacity by {overageDays.toFixed(1)} days (delay cost {formatCurrency(delayCost)}).
         </p>
+      ) : (
+        <p style={{ color: "#188038" }}>Healthy: Team capacity supports current timeline.</p>
       )}
 
-      <p>Burn Rate: {formatCurrency(dailyCost)}/day</p>
+      <p>Burn Rate: {formatCurrency(burnRate)}/day</p>
 
       <hr />
 
-      <h4>Risk Impact</h4>
-      <p>
-        Risk Adjusted Margin: {(riskAdjustedMargin * 100).toFixed(1)}%
+      <h4>Risk</h4>
+      <p style={{ color: riskMarginColor }}>
+        Risk-Adjusted Margin: {formatPercent(riskAdjustedMargin)}
       </p>
 
       <hr />
 
       <h4>Break-even</h4>
-      <p>{Math.round(breakEvenHours)} hours</p>
-    </div>
+      <p>{breakEvenHours.toFixed(1)} hours</p>
+    </section>
   );
 }
