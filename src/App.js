@@ -5,11 +5,25 @@ import ProfitPanel from "./components/ProfitPanel";
 import ClarifyingQuestions, {
   generateClarifyingQuestions,
 } from "./components/ClarifyingQuestions";
+import { C } from "./theme";
 
 const SCENARIOS = {
   safe: { plannedDays: 24, hoursPerDay: 6 },
   aggressive: { plannedDays: 16, hoursPerDay: 7 },
 };
+
+function scenarioButtonStyle(active) {
+  return {
+    marginRight: 8,
+    border: `1px solid ${active ? C.teal : C.border}`,
+    background: active ? "rgba(78,205,196,0.18)" : C.inp,
+    color: C.text,
+    padding: "8px 12px",
+    borderRadius: 8,
+    cursor: "pointer",
+    fontWeight: 600,
+  };
+}
 
 export default function App() {
   const [scenario, setScenario] = useState("safe");
@@ -60,36 +74,55 @@ export default function App() {
   });
 
   return (
-    <div style={{ padding: 24, fontFamily: "Arial, sans-serif", maxWidth: 900 }}>
-      <h1>Estimator</h1>
-      <p>Plan with confidence before project kickoff.</p>
+    <div
+      style={{
+        background: C.bg,
+        minHeight: "100vh",
+        color: C.text,
+        fontFamily: 'Inter, "Segoe UI", sans-serif',
+        padding: "28px 20px 40px",
+      }}
+    >
+      <div style={{ maxWidth: 980, margin: "0 auto" }}>
+        <h1 style={{ margin: 0, fontSize: 36, letterSpacing: 0.2 }}>Estimator</h1>
+        <p style={{ color: C.muted, marginTop: 8, marginBottom: 20 }}>
+          Plan with confidence before project kickoff.
+        </p>
 
-      <div style={{ marginBottom: 16 }}>
-        <strong>Scenario:</strong>{" "}
-        <button
-          type="button"
-          onClick={() => setScenario("safe")}
+        <section
           style={{
-            marginRight: 8,
-            backgroundColor: scenario === "safe" ? "#d9f2df" : "#fff",
+            background: C.card,
+            border: `1px solid ${C.border}`,
+            borderRadius: 14,
+            padding: 18,
+            marginBottom: 16,
           }}
         >
-          Safe
-        </button>
-        <button
-          type="button"
-          onClick={() => setScenario("aggressive")}
-          style={{ backgroundColor: scenario === "aggressive" ? "#ffe9cc" : "#fff" }}
-        >
-          Aggressive
-        </button>
+          <div style={{ marginBottom: 12 }}>
+            <strong style={{ marginRight: 8 }}>Scenario:</strong>
+            <button type="button" onClick={() => setScenario("safe")} style={scenarioButtonStyle(scenario === "safe")}>
+              Safe
+            </button>
+            <button type="button" onClick={() => setScenario("aggressive")} style={scenarioButtonStyle(scenario === "aggressive")}>
+              Aggressive
+            </button>
+          </div>
+
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            <p style={{ margin: 0 }}>
+              <span style={{ color: C.muted }}>Total Hours:</span>{" "}
+              <strong>{estimate.totalHours.toFixed(1)}</strong>
+            </p>
+            <p style={{ margin: 0 }}>
+              <span style={{ color: C.muted }}>Revenue Estimate:</span>{" "}
+              <strong>${Math.round(estimate.totalCost).toLocaleString()}</strong>
+            </p>
+          </div>
+        </section>
+
+        <ProfitPanel profitData={profitData} />
+        <ClarifyingQuestions questions={questions} />
       </div>
-
-      <p>Total Hours: {estimate.totalHours.toFixed(1)}</p>
-      <p>Revenue Estimate: ${Math.round(estimate.totalCost).toLocaleString()}</p>
-
-      <ProfitPanel profitData={profitData} />
-      <ClarifyingQuestions questions={questions} />
     </div>
   );
 }
