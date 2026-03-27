@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import React, { useMemo, useState } from "react";
 import { calcEstimate } from "./calcEstimate";
 import { calcProfitEstimate } from "./calcProfit";
@@ -12,6 +13,10 @@ const SCENARIOS = {
 };
 
 export default function App() {
+  const [inputs, setInputs] = useState({
+    deliverables: [{ baseHours: 12 }],
+    complexity: 1.2,
+    hourlyRate: 150,
   const [scenario, setScenario] = useState("safe");
 
   const [inputs] = useState({
@@ -26,6 +31,9 @@ export default function App() {
     revisionRounds: 2,
   });
 
+  const [planning] = useState({
+    team: { design: 1, am: 1 },
+    hoursPerDay: 6.5,
   const [planningBase] = useState({
     team: { strategy: 1, design: 2, content: 1, development: 1, am: 1 },
     plannedDays: 20,
@@ -52,6 +60,9 @@ export default function App() {
   const profitData = calcProfitEstimate(estimate, planning);
 
   const questions = generateClarifyingQuestions({
+    multipleStakeholders: true,
+    newClient: true,
+    hasContent: true,
     contentOwnership: true,
     stakeholders: planning.risks.multipleStakeholders,
     regulatoryConstraints: planning.risks.regulatoryConstraints,
@@ -60,6 +71,7 @@ export default function App() {
   });
 
   return (
+    <div style={{ padding: 24 }}>
     <div style={{ padding: 24, fontFamily: "Arial, sans-serif", maxWidth: 900 }}>
       <h1>Estimator</h1>
       <p>Plan with confidence before project kickoff.</p>
@@ -86,10 +98,13 @@ export default function App() {
       </div>
 
       <p>Total Hours: {estimate.totalHours.toFixed(1)}</p>
+      <p>Total Cost: ${Math.round(estimate.totalCost)}</p>
       <p>Revenue Estimate: ${Math.round(estimate.totalCost).toLocaleString()}</p>
 
       <ProfitPanel profitData={profitData} />
+
       <ClarifyingQuestions questions={questions} />
     </div>
   );
+}
 }
