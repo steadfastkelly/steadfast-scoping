@@ -1,41 +1,47 @@
-import React, { useMemo, useState } from "react";
-import { calcEstimate } from "./calcEstimate";
-import { calcProfitEstimate } from "./calcProfit";
-import ProfitPanel from "./components/ProfitPanel";
+import React, { useMemo, useState } from 'react';
+import { calcEstimate } from './calcEstimate';
 import ClarifyingQuestions, {
   generateClarifyingQuestions,
-} from "./components/ClarifyingQuestions";
-import { C } from "./theme";
+} from './components/ClarifyingQuestions';
+import CreativeDirectorCommandCenter from './components/CreativeDirectorCommandCenter';
+import ClickUpWorkloadCard from './components/ClickUpWorkloadCard';
+import useIsCompact from './hooks/useIsCompact';
+import { C } from './theme';
 
-const SCENARIOS = {
-  safe: { plannedDays: 24, hoursPerDay: 6 },
-  aggressive: { plannedDays: 16, hoursPerDay: 7 },
+const SPRINT_MODES = {
+  balanced: { plannedDays: 20, hoursPerDay: 6.5 },
+  launch: { plannedDays: 14, hoursPerDay: 7.0 },
 };
 
-function scenarioButtonStyle(active) {
+function modeButtonStyle(active, isCompact) {
   return {
-    marginRight: 8,
+    marginRight: isCompact ? 0 : 8,
     border: `1px solid ${active ? C.teal : C.border}`,
-    background: active ? "rgba(78,205,196,0.18)" : C.inp,
+    background: active ? 'rgba(78,205,196,0.18)' : C.inp,
     color: C.text,
-    padding: "8px 12px",
+    padding: '10px 12px',
     borderRadius: 8,
-    cursor: "pointer",
+    cursor: 'pointer',
     fontWeight: 600,
+    whiteSpace: 'nowrap',
+    width: isCompact ? '100%' : 'auto',
+    textAlign: 'center',
   };
 }
 
 export default function App() {
-  const [scenario, setScenario] = useState("safe");
+  const isCompact = useIsCompact();
+  const [mode, setMode] = useState('balanced');
+  const [clickupSummary, setClickupSummary] = useState(null);
 
   const [inputs] = useState({
     deliverables: [
-      { category: "strategy", baseHours: 10 },
-      { category: "design", baseHours: 24 },
-      { category: "content", baseHours: 16 },
-      { category: "development", baseHours: 18 },
+      { category: 'strategy', baseHours: 8 },
+      { category: 'design', baseHours: 34 },
+      { category: 'content', baseHours: 14 },
+      { category: 'development', baseHours: 10 },
     ],
-    complexity: 1.15,
+    complexity: 1.1,
     hourlyRate: 160,
     revisionRounds: 2,
   });
@@ -45,7 +51,7 @@ export default function App() {
     plannedDays: 20,
     hoursPerDay: 6.5,
     risks: {
-      unclearScope: true,
+      unclearScope: false,
       multipleStakeholders: true,
       regulatoryConstraints: false,
       vendorDependencies: true,
@@ -54,39 +60,39 @@ export default function App() {
   });
 
   const planning = useMemo(() => {
-    const profile = SCENARIOS[scenario] || SCENARIOS.safe;
+    const profile = SPRINT_MODES[mode] || SPRINT_MODES.balanced;
     return {
       ...planningBase,
       plannedDays: profile.plannedDays,
       hoursPerDay: profile.hoursPerDay,
     };
-  }, [planningBase, scenario]);
+  }, [planningBase, mode]);
 
   const estimate = calcEstimate(inputs);
-  const profitData = calcProfitEstimate(estimate, planning);
 
   const questions = generateClarifyingQuestions({
-    contentOwnership: true,
     stakeholders: planning.risks.multipleStakeholders,
-    regulatoryConstraints: planning.risks.regulatoryConstraints,
     vendorDependencies: planning.risks.vendorDependencies,
     newClient: planning.risks.newClient,
+    tightTimeline: mode === 'launch',
   });
 
   return (
     <div
       style={{
         background: C.bg,
-        minHeight: "100vh",
+        minHeight: '100vh',
         color: C.text,
         fontFamily: 'Inter, "Segoe UI", sans-serif',
-        padding: "28px 20px 40px",
+        padding: isCompact ? '16px 12px 28px' : '28px 20px 40px',
       }}
     >
-      <div style={{ maxWidth: 980, margin: "0 auto" }}>
-        <h1 style={{ margin: 0, fontSize: 36, letterSpacing: 0.2 }}>Estimator</h1>
-        <p style={{ color: C.muted, marginTop: 8, marginBottom: 20 }}>
-          Plan with confidence before project kickoff.
+      <div style={{ maxWidth: 980, margin: '0 auto' }}>
+        <h1 style={{ margin: 0, fontSize: isCompact ? 28 : 36, letterSpacing: 0.2, lineHeight: 1.15 }}>
+          Creative Director Hub
+        </h1>
+        <p style={{ color: C.muted, marginTop: 8, marginBottom: 20, lineHeight: 1.45 }}>
+          Keep the design team focused, aligned, and shipping at quality under real agency pressure.
         </p>
 
         <section
@@ -94,33 +100,44 @@ export default function App() {
             background: C.card,
             border: `1px solid ${C.border}`,
             borderRadius: 14,
-            padding: 18,
+            padding: isCompact ? 14 : 18,
             marginBottom: 16,
           }}
         >
           <div style={{ marginBottom: 12 }}>
-            <strong style={{ marginRight: 8 }}>Scenario:</strong>
-            <button type="button" onClick={() => setScenario("safe")} style={scenarioButtonStyle(scenario === "safe")}>
-              Safe
-            </button>
-            <button type="button" onClick={() => setScenario("aggressive")} style={scenarioButtonStyle(scenario === "aggressive")}>
-              Aggressive
-            </button>
+            <strong style={{ marginRight: 8, display: 'block', marginBottom: 8 }}>Sprint mode:</strong>
+            <div style={{ display: 'flex', gap: 8, flexDirection: isCompact ? 'column' : 'row' }}>
+              <button type="button" onClick={() => setMode('balanced')} style={modeButtonStyle(mode === 'balanced', isCompact)}>
+                Balanced Delivery
+              </button>
+              <button type="button" onClick={() => setMode('launch')} style={modeButtonStyle(mode === 'launch', isCompact)}>
+                Launch Push
+              </button>
+            </div>
           </div>
 
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', flexDirection: isCompact ? 'column' : 'row' }}>
             <p style={{ margin: 0 }}>
-              <span style={{ color: C.muted }}>Total Hours:</span>{" "}
-              <strong>{estimate.totalHours.toFixed(1)}</strong>
+              <span style={{ color: C.muted }}>Total scoped effort:</span>{' '}
+              <strong>{estimate.totalHours.toFixed(1)} hours</strong>
             </p>
             <p style={{ margin: 0 }}>
-              <span style={{ color: C.muted }}>Revenue Estimate:</span>{" "}
-              <strong>${Math.round(estimate.totalCost).toLocaleString()}</strong>
+              <span style={{ color: C.muted }}>Planned sprint length:</span>{' '}
+              <strong>{planning.plannedDays} days</strong>
+            </p>
+            <p style={{ margin: 0 }}>
+              <span style={{ color: C.muted }}>Review intensity:</span>{' '}
+              <strong>{inputs.revisionRounds} rounds</strong>
             </p>
           </div>
         </section>
 
-        <ProfitPanel profitData={profitData} />
+        <ClickUpWorkloadCard onSummaryLoaded={setClickupSummary} />
+        <CreativeDirectorCommandCenter
+          estimate={estimate}
+          planning={planning}
+          clickupSummary={clickupSummary}
+        />
         <ClarifyingQuestions questions={questions} />
       </div>
     </div>

@@ -1,35 +1,34 @@
-import React from "react";
-import { C } from "../theme";
+import React from 'react';
+import useIsCompact from '../hooks/useIsCompact';
+import { C } from '../theme';
 
 export function generateClarifyingQuestions(inputs = {}) {
   const questions = [];
 
-  if (inputs.contentOwnership) {
-    questions.push("Who owns final content approval and sign-off?");
-    questions.push("Is all core content available before design starts?");
-  }
+  questions.push('Is there one named creative approver for final visual sign-off?');
+  questions.push('What is the non-negotiable quality bar for this deliverable set?');
 
   if (inputs.stakeholders) {
-    questions.push("Who is the single decision-maker for scope changes?");
-    questions.push("How will feedback be consolidated into one round?");
-  }
-
-  if (inputs.regulatoryConstraints) {
-    questions.push("What compliance or legal review steps affect timeline?");
+    questions.push('How will design feedback be merged into one consolidated round per cycle?');
   }
 
   if (inputs.vendorDependencies) {
-    questions.push("What vendor turnaround times and handoff dates are fixed?");
+    questions.push('Which design tokens/components must vendors use without alteration?');
   }
 
   if (inputs.newClient) {
-    questions.push("Are brand assets, access, and approvals complete for kickoff?");
+    questions.push('Has the client approved mood/style direction before production starts?');
+  }
+
+  if (inputs.tightTimeline) {
+    questions.push('Which screens/assets are quality-critical vs. safe to simplify this sprint?');
   }
 
   return questions;
 }
 
 export default function ClarifyingQuestions({ questions }) {
+  const isCompact = useIsCompact();
   if (!questions || questions.length === 0) return null;
 
   return (
@@ -39,16 +38,16 @@ export default function ClarifyingQuestions({ questions }) {
         background: C.card,
         border: `1px solid ${C.border}`,
         borderRadius: 14,
-        padding: 18,
+        padding: isCompact ? 14 : 18,
       }}
     >
-      <h3 style={{ marginTop: 0, marginBottom: 10 }}>Clarify Before Scoping</h3>
-      <ul style={{ listStyle: "none", paddingLeft: 0, marginBottom: 0 }}>
+      <h3 style={{ marginTop: 0, marginBottom: 10, fontSize: isCompact ? 20 : 22 }}>Creative Alignment Checklist</h3>
+      <ul style={{ listStyle: 'none', paddingLeft: 0, marginBottom: 0 }}>
         {questions.map((question, index) => (
           <li key={question} style={{ marginBottom: 10, color: C.text }}>
-            <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
-              <input type="checkbox" style={{ marginTop: 3 }} />
-              <span>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer', minWidth: 0 }}>
+              <input type="checkbox" style={{ marginTop: 3, flexShrink: 0 }} />
+              <span style={{ wordBreak: 'break-word' }}>
                 <span style={{ color: C.muted }}>{index + 1}.</span> {question}
               </span>
             </label>
